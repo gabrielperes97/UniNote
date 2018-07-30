@@ -1,0 +1,24 @@
+{
+  "name": "uninote-microservice",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gabrielperes97/UniNote-Microservice.git"
+  },
+  "author": "Gabriel Peres Leopoldino",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gabrielperes97/UniNote-Microservice/issues"
+  },
+  "homepage": "https://github.com/gabrielperes97/UniNote-Microservice#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "mongoose": "^5.2.5"
+  }
+}
