@@ -36,7 +36,7 @@ describe("Token", () =>{
                 });
         });
 
-        it("Usuario/senha incorretos", (done) => {
+        it("Senha incorreta", (done) => {
             let user1 = {
                 firstname: "Gabriel",
                 lastname: "Peres Leopoldino",
@@ -58,6 +58,33 @@ describe("Token", () =>{
                         res.body.should.be.a('object');
                         res.body.should.have.property('success').eql(false);
                         res.body.should.have.property("message").eql("Wrong password");
+                    done();
+                    });
+            });
+        });
+
+        it("Usuario incorreto", (done) => {
+            let user1 = {
+                firstname: "Gabriel",
+                lastname: "Peres Leopoldino",
+                username: "gabrielperes",
+                password: "H4KUN4_M4T4T4",
+                email: "gabriel@peres.com"
+            };
+            let user2 = {
+                username: "gabriel",
+                password: "H4KUN4_M4T4T4"
+            }
+            let user = new User(user1);
+            user.save((err, user) => {
+                chai.request(server)
+                    .post("/token")
+                    .send(user2)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a('object');
+                        res.body.should.have.property('success').eql(false);
+                        res.body.should.have.property("message").eql("Wrong username");
                     done();
                     });
             });
