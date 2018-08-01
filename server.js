@@ -2,6 +2,8 @@ var express = require('express'),
 
 app = express(),
 
+consign = require("consign"),
+
 mongoose = require('mongoose'),
 
 morgan = require('morgan'),
@@ -37,6 +39,12 @@ var routes = require('./api/routes/user');
 routes(app);
 
 app.listen(port);
+
+consign({cwd: 'server'})
+  .include("api/models")
+  .include("api/controllers")
+  .then("api/routes")
+  .into(app)
 
 console.log('RESTful API server started on: ' + port + " using "+ process.env.NODE_ENV + " profile");
 

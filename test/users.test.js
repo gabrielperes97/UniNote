@@ -34,9 +34,8 @@ describe("Users", () =>{
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.be.a('object');
-                    res.body.should.have.property('errors');
-                    res.body.errors.should.have.property('password');
-                    res.body.errors.password.should.have.property('kind').eql('required');
+                    res.body.should.have.property('success').eql(false);
+                    res.body.should.have.property('message').eql("data and salt arguments required");
                 done();
                 });
         });
@@ -55,12 +54,8 @@ describe("Users", () =>{
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.be.a('object');
-                    res.body.should.have.property('firstname');
-                    res.body.should.have.property('lastname');
-                    res.body.should.have.property('username');
-                    res.body.should.have.property('password');
-                    res.body.should.have.property('email');
-                    res.body.should.have.property('created_date');
+                    res.body.should.have.property('success').eql(true);
+                    res.body.should.have.property('message').eql("User created with success");
                 done();
                 });
         });
@@ -88,8 +83,8 @@ describe("Users", () =>{
                     .end((err, res) => {
                         res.should.have.status(200);
                         res.body.should.be.a('object');
-                        res.body.should.have.property('sucess').eql(false);
-                        res.body.should.have.property("message").eql("This usename has no available");
+                        res.body.should.have.property('success').eql(false);
+                        res.body.should.have.property("message").eql("This username has no available");
                     done();
                     });
             });
