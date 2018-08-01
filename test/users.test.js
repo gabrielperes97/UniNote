@@ -63,6 +63,36 @@ describe("Users", () =>{
                     res.body.should.have.property('created_date');
                 done();
                 });
+        });
+
+        it("Não deve haver usuários iguais", (done) => {
+            let user1 = {
+                firstname: "Gabriel",
+                lastname: "Peres Leopoldino",
+                username: "gabrielperes",
+                password: "123321",
+                email: "gabriel@peres.com"
+            };
+            let user2 = {
+                firstname: "Gabriel",
+                lastname: "Peres da Silva",
+                username: "gabrielperes",
+                password: "321321",
+                email: "gabriel@silva.com"
+            };
+            let user = new User(user1);
+            user.save((err, user) => {
+                chai.request(server)
+                    .post("/user")
+                    .send(user2)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a('object');
+                        res.body.should.have.property('sucess').eql(false);
+                        res.body.should.have.property("message").eql("This usename has no available");
+                    done();
+                    });
+            });
         })
     });
 });

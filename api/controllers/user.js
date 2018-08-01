@@ -12,13 +12,21 @@ exports.list_all_users = function(req, res) {
 };
 
 exports.create_a_user = function(req, res) {
-    var new_user = new User(req.body);
-    new_user.save(function(err, msg){
-        if (err)
-            res.send(err);
-        else
-            res.json(msg);
-    });
+    User.findOne({"username": req.body.username})
+        .then(user => {
+            if(user) {
+                res.json({ sucess: false, message: "This usename has no available"});
+            }
+            else{
+                var new_user = new User(req.body);
+                new_user.save(function(err, msg){
+                    if (err)
+                        res.send(err);
+                    else
+                        res.json(msg);
+                });
+            }
+        });
 };
 
 exports.read_a_user = function(req, res) {
