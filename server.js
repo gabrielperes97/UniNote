@@ -14,6 +14,8 @@ bodyParser = require('body-parser');
 
 config = require('./configs/'+ (process.env.NODE_ENV || "dev") + ".json");
 
+auth = require("./configs/auth")();
+
 port = config.port || 3000;
 
 mongoose.Promise = global.Promise;
@@ -33,10 +35,13 @@ if(process.env.NODE_ENV !== 'test') {
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(bodyParser.json());
+app.use(auth.initialize());
 
-var routes = require('./api/routes/user');
+var userRoutes = require('./api/routes/user');
+userRoutes(app);
 
-routes(app);
+var tokenRoutes = require('./api/routes/token');
+tokenRoutes(app);
 
 app.listen(port);
 
