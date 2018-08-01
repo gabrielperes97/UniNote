@@ -3,8 +3,7 @@
 module.exports = function(app) {
     var users = require('../controllers/user');
 
-    app.route('/users')
-        .get(users.list_all_users)
+    app.route('/user')
         .post(users.create_a_user);
     
     app.route('/user/:userId')

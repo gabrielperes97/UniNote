@@ -1,0 +1,4 @@
+{
+    "DBHost" : "mongodb://mongo:27017/UniNote",
+    "port" : 3000
+}
