@@ -72,10 +72,32 @@ exports.read_a_note = function(req, res) {
 };
 
 exports.update_a_note = function (req, res) {
-    User.findOneAndUpdate({_id:req.params.msgId}, req.body, {new:true}, function(err, msg){
+    req.user.exec((err, user) => {
         if (err)
-            res.send(err);
-        res.json(msg);
+            res.json({success: false, message: err});
+        else
+        {
+            let note = user.notes.id(req.params.noteId);
+            if (note)
+            {
+                let id = note._id.toString();
+                Object.assign(note, req.body)
+                user.save((err) => {
+                    if (err)
+                        res.json({success:false, message: err});
+                    else
+                    {
+                        let result = note.toObject();
+                        result.success = true;
+                        res.json(result);
+                    }
+                });
+            }
+            else
+            {
+                res.json({success:false, message: 'Note id not found'});
+            }
+        }
     });
 };
 

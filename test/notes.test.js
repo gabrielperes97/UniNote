@@ -388,6 +388,65 @@ describe("Notes", () =>{
         });
     });
 
+    describe("/PUT/:id note", () => {
+        it("Atualizar nota", (done) => {
+            let notes_before= [
+                {
+                    title: "Materias",
+                    content: "Portugues\nMatematica",
+                    background_color: "#000",
+                    font_color: "#FFF"
+                },
+
+                {
+                    title: "Numeros",
+                    content: "456789",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Palavras",
+                    content: "Olho, brinco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+            notes_before.forEach(element => {
+                user.notes.push(element);
+            });
+            user.save((err, user) => {
+                //Realiza o login
+                let payload = {id: user._id};
+                let token = jwt.encode(payload, config.jwtSecret);
+                let test_note = user.notes[1];
+                let update = {
+                    content: "123456789"
+                };
+
+                chai.request(server)
+                    .put("/note/"+test_note.id)
+                    .set("authorization",token)
+                    .send(update)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a('object');
+                        res.body.should.have.property('success').eql(true);
+                        res.body.should.have.property('_id').eql(test_note.id);
+                        res.body.should.have.property('title').eql(test_note.title);
+                        res.body.should.have.property('content').eql(update.content); //Updated field
+                        res.body.should.have.property('background_color').eql(test_note.background_color);
+                        res.body.should.have.property('font_color').eql(test_note.font_color);
+                        res.body.should.have.property('created_date').eql(test_note.created_date.toISOString());
+                        User.findById(user.id).exec((err, new_user) => {
+                            new_user.notes.id(test_note.id).content.should.be.eql(update.content);
+                            done();
+                        });
+                    });
+
+            });
+        });
+    });
+
 
 
 });
