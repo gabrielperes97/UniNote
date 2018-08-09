@@ -1,7 +1,8 @@
 'use strict';
 
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+let mongoose = require('mongoose');
+let Note = require('./note');
+let Schema = mongoose.Schema;
 var userSchema = new Schema ({
     firstname: {
         type: String,
@@ -36,7 +37,9 @@ var userSchema = new Schema ({
     isAdmin: { 
         type: Boolean,
         default: false
-    }
+    },
+
+    notes: [Note]
 });
 
 module.exports = mongoose.model('Users', userSchema);

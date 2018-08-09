@@ -9,14 +9,14 @@ let Strategy = passportJWT.Strategy;
 
 let params = {
     secretOrKey: config.jwtSecret,
-    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
+    jwtFromRequest: ExtractJwt.fromHeader('authorization')
 };
 
 module.exports = function() {
     let strategy = new Strategy(params, function(payload, done){
         let user = User.findById(payload.id) || null;
         if (user) {
-            return done(null, {id: user.id});
+            return done(null, user);
         } else {
             return done(new Error("User not found"), null);
         }
@@ -27,7 +27,7 @@ module.exports = function() {
             return passport.initialize();
         },
         authenticate: function() {
-            return passport.authenticate("jwt", cfg.jwtSession);
+            return passport.authenticate("jwt", config.jwtSession);
         }
     };
 };

@@ -2,11 +2,11 @@ var express = require('express'),
 
 app = express(),
 
-consign = require("consign"),
-
 mongoose = require('mongoose'),
 
 morgan = require('morgan'),
+
+Note = require('./api/models/note'),
 
 User = require('./api/models/user'),
 
@@ -37,19 +37,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(auth.initialize());
 
-var userRoutes = require('./api/routes/user');
+let userRoutes = require('./api/routes/user');
 userRoutes(app);
 
-var tokenRoutes = require('./api/routes/token');
+let tokenRoutes = require('./api/routes/token');
 tokenRoutes(app);
 
-app.listen(port);
+let noteRoutes = require('./api/routes/note');
+noteRoutes(app);
 
-consign({cwd: 'server'})
-  .include("api/models")
-  .include("api/controllers")
-  .then("api/routes")
-  .into(app)
+app.listen(port);
 
 console.log('RESTful API server started on: ' + port + " using "+ process.env.NODE_ENV + " profile");
 
