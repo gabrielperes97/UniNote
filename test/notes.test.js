@@ -26,10 +26,12 @@ describe("Notes", () =>{
     //esvazia o banco a cada teste
     beforeEach((done) => {
         User.remove({}, (err) => {
-            done();
+            user = new User(user_example);
+            user.save((err) => {
+                done();
+            });
         });
-        user = new User(user_example);
-        user.save();
+        
     });
 
     describe("/GET note", () => {
@@ -285,9 +287,8 @@ describe("Notes", () =>{
                         res.body.should.have.property('background_color').eql(test_note.background_color);
                         res.body.should.have.property('font_color').eql(test_note.font_color);
                         res.body.should.have.property('created_date');
-                            
+                        done();
                     });
-                done();
             });
         });
     });
@@ -332,11 +333,61 @@ describe("Notes", () =>{
                         res.body.should.have.property('success').eql(true);
                         res.body.should.have.property('_id').eql(test_note._id.toString());
                         res.body.should.have.property('message').eql("Note remove succefully");
+                        User.findById(test_note.__parent.id).exec((err, new_user) => {
+                            new_user.notes.length.should.be.eql(2);
+                            should.not.exist(new_user.notes.id(test_note.id));
+                            done();
+                        });
                     });
+            });
+        });
 
-                done();
+        it("Falha ao remover nota", (done) => {
+            let notes_before= [
+                {
+                    title: "Materias",
+                    content: "Portugues\nMatematica",
+                    background_color: "#000",
+                    font_color: "#FFF"
+                },
+
+                {
+                    title: "Numeros",
+                    content: "456789",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Palavras",
+                    content: "Olho, brinco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+            notes_before.forEach(element => {
+                user.notes.push(element);
+            });
+            user.save((err) => {
+                //Realiza o login
+                let payload = {id: user._id};
+                let token = jwt.encode(payload, config.jwtSecret);
+                chai.request(server)
+                    .delete("/note/"+1234)//Fake ID
+                    .set("authorization",token)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a('object');
+                        res.body.should.have.property('success').eql(false);
+                        res.body.should.have.property('message').eql("Note id not found");
+                        User.findById(user.id).exec((err, new_user) => {
+                            new_user.notes.length.should.be.eql(3);
+                            done();
+                        });
+                    });
             });
         });
     });
+
+
 
 });

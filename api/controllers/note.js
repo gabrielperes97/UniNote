@@ -47,9 +47,7 @@ exports.create_a_note = function(req, res) {
                 }
             });
         }
-    })
-    
-
+    });
 };
 
 exports.read_a_note = function(req, res) {
@@ -91,8 +89,13 @@ exports.delete_a_note = function(req, res) {
             if (note)
             {
                 let id = note._id.toString();
-               note.remove();
-               res.json({success:true, message: 'Note remove succefully', _id: id});
+                note.remove();
+                user.save((err) => {
+                    if (err)
+                        res.json({success:false, message: err});
+                    else
+                        res.json({success:true, message: 'Note remove succefully', _id: id});
+                });
             }
             else
             {
