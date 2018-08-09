@@ -89,7 +89,8 @@ exports.delete_a_note = function (req, res) {
 };
 
 exports.get_notes = function (req, res) {
-
+    let notes = [];
+    for ()
 }
 
 exports.update_notes = function (req, res) {

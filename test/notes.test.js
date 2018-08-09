@@ -80,8 +80,8 @@ describe("Notes", () =>{
                             res.body.notes[i].should.have.property('font_color').eql(notes_before[i].font_color);
                             res.body.notes[i].should.have.property('created_date');
                         }
+                        done();
                     });
-                done();
             });
         });
     });
@@ -443,6 +443,134 @@ describe("Notes", () =>{
                         });
                     });
 
+            });
+        });
+    });
+
+    describe("/POST notes", () => {
+        it("Recuperar notas em lote", (done) => {
+            let notes_before= [
+                {
+                    title: "Materias",
+                    content: "Portugues\nMatematica",
+                    background_color: "#000",
+                    font_color: "#FFF"
+                },
+
+                {
+                    title: "Numeros",
+                    content: "456789",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Palavras",
+                    content: "Olho, brinco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+            notes_before.forEach(element => {
+                user.notes.push(element);
+            });
+            user.save((err, user) => {
+                //Realiza o login
+                let payload = {id: user._id};
+                let token = jwt.encode(payload, config.jwtSecret);
+
+                let requested_notes = [
+                    {
+                        id: user.notes[0].id
+                    },
+                    {
+                        id: user.notes[2].id
+                    }
+                ];
+
+                chai.request(server)
+                    .post("/note")
+                    .set("authorization",token)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a('array');
+                        res.body.notes.length.should.be.eql(2);
+                        for (var i=0; i<2; i++)
+                        {
+                            note = user.notes.id(requested_notes);
+                            res.body[i].should.have.property('_id').eql(note.id);
+                            res.body[i].should.have.property('title').eql(note.title);
+                            res.body[i].should.have.property('content').eql(note.content);
+                            res.body[i].should.have.property('background_color').eql(note.background_color);
+                            res.body[i].should.have.property('font_color').eql(note.font_color);
+                            res.body[i].should.have.property('created_date').eql(note.created_date.toISOString());
+                        }
+                        done();
+                    });
+            });
+        });
+    });
+
+    describe("/PUT notes", () => {
+    });
+
+    describe("/DELETE notes", () => {
+        it("Remover notas em lote", (done) => {
+            let notes_before= [
+                {
+                    title: "Materias",
+                    content: "Portugues\nMatematica",
+                    background_color: "#000",
+                    font_color: "#FFF"
+                },
+
+                {
+                    title: "Numeros",
+                    content: "456789",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Palavras",
+                    content: "Olho, brinco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+
+            notes_before.forEach(element => {
+                user.notes.push(element);
+            });
+            user.save((err) => {
+                //Realiza o login
+                let payload = {id: user._id};
+                let token = jwt.encode(payload, config.jwtSecret);
+                let notes_to_delete = [
+                    {
+                        id: user.notes[0].id
+                    },
+                    {
+                        id: user.notes[2].id
+                    }
+                ];
+
+                chai.request(server)
+                    .delete("/note")
+                    .set("authorization",token)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a('array');
+                        res.body.notes.length.should.be.eql(2);
+                        for(var i=0; i<1; i++){
+                            res.body[i].should.have.property('success').eql(true);
+                            res.body[i].should.have.property('id').eql(notes_to_delete[i].id);
+                        }
+                        User.findById(test_note.__parent.id).exec((err, new_user) => {
+                            new_user.notes.length.should.be.eql(1);
+                            should.not.exist(new_user.notes.id(notes_to_delete[0].id));
+                            should.not.exist(new_user.notes.id(notes_to_delete[1].id));
+                            done();
+                        });
+                    });
             });
         });
     });
