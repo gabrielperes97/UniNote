@@ -53,11 +53,23 @@ exports.create_a_note = function(req, res) {
 };
 
 exports.read_a_note = function(req, res) {
-    User.findById(req.params.userId, function(err, msg) {
+    req.user.exec((err, user) => {
         if (err)
-            res.send(err);
+            res.json({success: false, message: err});
         else
-            res.json(msg);
+        {
+            let note = user.notes.id(req.params.noteId);
+            if (note)
+            {
+                let obj = note.toObject();
+                obj.success = true;
+                res.json(obj);
+            }
+            else
+            {
+                res.json({success:false, message: 'Note id not found'});
+            }
+        }
     });
 };
 
@@ -70,11 +82,22 @@ exports.update_a_note = function (req, res) {
 };
 
 exports.delete_a_note = function(req, res) {
-    User.remove({
-        _id:req.params.msgId
-    }, function(err, msg) {
+    req.user.exec((err, user) => {
         if (err)
-            res.send(err);
-        res.json({message: 'User successfully deleted'});
+            res.json({success: false, message: err});
+        else
+        {
+            let note = user.notes.id(req.params.noteId);
+            if (note)
+            {
+                let id = note._id.toString();
+               note.remove();
+               res.json({success:true, message: 'Note remove succefully', _id: id});
+            }
+            else
+            {
+                res.json({success:false, message: 'Note id not found'});
+            }
+        }
     });
 };
