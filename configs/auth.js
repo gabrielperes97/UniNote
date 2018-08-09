@@ -14,12 +14,12 @@ let params = {
 
 module.exports = function() {
     let strategy = new Strategy(params, function(payload, done){
-        let user = User.findById(payload.id) || null;
-        if (user) {
-            return done(null, user);
-        } else {
-            return done(new Error("User not found"), null);
-        }
+        return User.findById(payload.id).exec((err, user) => {
+            if (user)
+                return done(null, user);
+            else
+                return done(new Error("User not found"), null);
+        });
     });
     passport.use(strategy);
     return {
