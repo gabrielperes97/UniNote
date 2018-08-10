@@ -45,7 +45,7 @@ exports.read_a_note = function (req, res) {
         res.json(obj);
     }
     else {
-        res.json({ success: false, message: 'Note id not found' });
+        res.json({ success: false, message: 'Note id not found', _id: req.params.noteId });
     }
 };
 
@@ -66,7 +66,7 @@ exports.update_a_note = function (req, res) {
         });
     }
     else {
-        res.json({ success: false, message: 'Note id not found' });
+        res.json({ success: false, message: 'Note id not found', _id: req.params.noteId});
     }
 };
 
@@ -84,19 +84,71 @@ exports.delete_a_note = function (req, res) {
         });
     }
     else {
-        res.json({ success: false, message: 'Note id not found' });
+        res.json({ success: false, message: 'Note id not found', _id: req.params.noteId });
     }
 };
 
 exports.get_notes = function (req, res) {
     let notes = [];
-    for ()
+    let user = req.user;
+    req.body.forEach(element => {
+        let note = user.notes.id(element._id);
+        if (note)
+        {
+            let obj = note.toObject();
+            obj.success = true;
+            notes.push(obj);
+        }
+        else
+            notes.push({success: false, message: "Note id not found", _id: element._id});
+    });
+    res.send(notes);
 }
 
 exports.update_notes = function (req, res) {
+    let user = req.user;
+    let result = [];
+    req.body.forEach(element => {
+        let note = user.notes.id(element._id);
+        if (note)
+        {
+            let id = note.id;
 
+            Object.assign(note, element);
+            let obj = note.toObject();
+            obj.success = true;
+            result.push(obj);
+        }
+        else
+            result.push({success: false, message: "Note id not found", _id: element._id});
+    });
+    user.save((err) => {
+        if (err)
+            res.json({success: false, message: err});
+        else
+            res.send(result);
+    });
 }
 
 exports.delete_notes = function (req, res) {
+    let user = req.user;
+    let result = [];
+    req.body.forEach(element => {
+        let note = user.notes.id(element.id);
+        if (note)
+        {
+            let id = note.id;
+            note.remove();
+            result.push({id: id, success: true});
+        }
+        else
+            result.push({success: false, message: "Note id not found", id: element.id});
+    });
+    user.save((err) => {
+        if (err)
+            res.json({success: false, message: err});
+        else
+            res.send(result);
+    });
 
 }

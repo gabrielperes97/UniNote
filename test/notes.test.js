@@ -3,16 +3,16 @@ mongoose = require("mongoose");
 User = require('../api/models/user')
 
 chai = require("chai")
-chaiHttp =  require("chai-http");
+chaiHttp = require("chai-http");
 server = require("../server");
 should = chai.should();
 let bcrypt = require("bcrypt");
 let jwt = require("jwt-simple");
-let config = require('../configs/'+ (process.env.NODE_ENV || "dev") + ".json");
+let config = require('../configs/' + (process.env.NODE_ENV || "dev") + ".json");
 
 chai.use(chaiHttp);
 
-describe("Notes", () =>{
+describe("Notes", () => {
 
     let user_example = {
         firstname: "Gabriel",
@@ -31,12 +31,12 @@ describe("Notes", () =>{
                 done();
             });
         });
-        
+
     });
 
     describe("/GET note", () => {
         it("Listar todas as notas inseridas", (done) => {
-            let notes_before= [
+            let notes_before = [
                 {
                     title: "Materias",
                     content: "Portugues\nMatematica",
@@ -62,18 +62,17 @@ describe("Notes", () =>{
             });
             user.save((err) => {
                 //Realiza o login
-                let payload = {id: user._id};
+                let payload = { id: user._id };
                 let token = jwt.encode(payload, config.jwtSecret);
                 chai.request(server)
                     .get("/note")
-                    .set("authorization",token)
+                    .set("authorization", token)
                     .end((err, res) => {
                         res.should.have.status(200);
                         res.body.should.be.a('object');
                         res.body.notes.should.be.a('array');
                         res.body.notes.length.should.be.eql(3);
-                        for (var i=0; i<3; i++)
-                        {
+                        for (var i = 0; i < 3; i++) {
                             res.body.notes[i].should.have.property('title').eql(notes_before[i].title);
                             res.body.notes[i].should.have.property('content').eql(notes_before[i].content);
                             res.body.notes[i].should.have.property('background_color').eql(notes_before[i].background_color);
@@ -89,22 +88,22 @@ describe("Notes", () =>{
     describe("/POST note", () => {
         it("Inserir uma nota", (done) => {
             //Realiza o login
-            let payload = {id: user._id};
+            let payload = { id: user._id };
             let token = jwt.encode(payload, config.jwtSecret);
 
-            let note = 
+            let note =
                 [
                     {
-                    title: "Datas",
-                    content: "11/05/2037 - Não quero nem sabe com quantos anos eu vou chegar",
-                    background_color: "#000",
-                    font_color: "#FFF"
+                        title: "Datas",
+                        content: "11/05/2037 - Não quero nem sabe com quantos anos eu vou chegar",
+                        background_color: "#000",
+                        font_color: "#FFF"
                     }
                 ];
 
             chai.request(server)
                 .post("/note")
-                .set("authorization",token)
+                .set("authorization", token)
                 .send(note)
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -116,21 +115,93 @@ describe("Notes", () =>{
                     res.body[0].should.have.property('background_color').eql(note[0].background_color);
                     res.body[0].should.have.property('font_color').eql(note[0].font_color);
                     res.body[0].should.have.property('created_date');
-                done();
+                    done();
                 });
         });
 
         it("Inserir 3 notas", (done) => {
             //Realiza o login
-            let payload = {id: user._id};
+            let payload = { id: user._id };
             let token = jwt.encode(payload, config.jwtSecret);
 
             let notes = [
-                    {
+                {
                     title: "Datas",
                     content: "11/05/2037 - Não quero nem sabe com quantos anos eu vou chegar",
                     background_color: "#000",
                     font_color: "#FFF"
+                },
+
+                {
+                    title: "A fazer",
+                    content: "*Ir no banco\nIr no cabelereiro",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Lembrete",
+                    content: "Verificar site do banco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+
+            chai.request(server)
+                .post("/note")
+                .set("authorization", token)
+                .send(notes)
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.be.a('array');
+                    res.body.length.should.be.eql(3);
+                    for (var i = 0; i < 3; i++) {
+                        res.body[i].should.have.property('success').eql(true);
+                        res.body[i].should.have.property('title').eql(notes[i].title);
+                        res.body[i].should.have.property('content').eql(notes[i].content);
+                        res.body[i].should.have.property('background_color').eql(notes[i].background_color);
+                        res.body[i].should.have.property('font_color').eql(notes[i].font_color);
+                        res.body[i].should.have.property('created_date');
+                    }
+                    done();
+                });
+        });
+
+        it("Inserir notas com o banco já contendo algumas", (done) => {
+            let notes_before = [
+                {
+                    title: "Materias",
+                    content: "Portugues\nMatematica",
+                    background_color: "#000",
+                    font_color: "#FFF"
+                },
+
+                {
+                    title: "Numeros",
+                    content: "456789",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Palavras",
+                    content: "Olho, brinco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+            notes_before.forEach(element => {
+                user.notes.push(element);
+            });
+            user.save((err) => {
+                //Realiza o login
+                let payload = { id: user._id };
+                let token = jwt.encode(payload, config.jwtSecret);
+
+                let notes = [
+                    {
+                        title: "Datas",
+                        content: "11/05/2037 - Não quero nem sabe com quantos anos eu vou chegar",
+                        background_color: "#000",
+                        font_color: "#FFF"
                     },
 
                     {
@@ -147,89 +218,15 @@ describe("Notes", () =>{
                     }
                 ];
 
-            chai.request(server)
-                .post("/note")
-                .set("authorization",token)
-                .send(notes)
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.be.a('array');
-                    res.body.length.should.be.eql(3);
-                    for (var i=0; i<3; i++)
-                    {
-                        res.body[i].should.have.property('success').eql(true);
-                        res.body[i].should.have.property('title').eql(notes[i].title);
-                        res.body[i].should.have.property('content').eql(notes[i].content);
-                        res.body[i].should.have.property('background_color').eql(notes[i].background_color);
-                        res.body[i].should.have.property('font_color').eql(notes[i].font_color);
-                        res.body[i].should.have.property('created_date');
-                    }
-                done();
-                });
-        });
-
-        it("Inserir notas com o banco já contendo algumas", (done) => {
-            let notes_before= [
-                {
-                    title: "Materias",
-                    content: "Portugues\nMatematica",
-                    background_color: "#000",
-                    font_color: "#FFF"
-                },
-
-                {
-                    title: "Numeros",
-                    content: "456789",
-                    background_color: "#111",
-                    font_color: "#EEE"
-                },
-                {
-                    title: "Palavras",
-                    content: "Olho, brinco",
-                    background_color: "#222",
-                    font_color: "#GGG"
-                }
-            ];
-            notes_before.forEach(element => {
-                user.notes.push(element);
-            });
-            user.save((err) => {
-                //Realiza o login
-                let payload = {id: user._id};
-                let token = jwt.encode(payload, config.jwtSecret);
-
-                let notes = [
-                        {
-                            title: "Datas",
-                            content: "11/05/2037 - Não quero nem sabe com quantos anos eu vou chegar",
-                            background_color: "#000",
-                            font_color: "#FFF"
-                        },
-
-                        {
-                            title: "A fazer",
-                            content: "*Ir no banco\nIr no cabelereiro",
-                            background_color: "#111",
-                            font_color: "#EEE"
-                        },
-                        {
-                            title: "Lembrete",
-                            content: "Verificar site do banco",
-                            background_color: "#222",
-                            font_color: "#GGG"
-                        }
-                    ];
-
                 chai.request(server)
                     .post("/note")
-                    .set("authorization",token)
+                    .set("authorization", token)
                     .send(notes)
                     .end((err, res) => {
                         res.should.have.status(200);
                         res.body.should.be.a('array');
                         res.body.length.should.be.eql(3);
-                        for (var i=0; i<3; i++)
-                        {
+                        for (var i = 0; i < 3; i++) {
                             res.body[i].should.have.property('success').eql(true);
                             res.body[i].should.have.property('title').eql(notes[i].title);
                             res.body[i].should.have.property('content').eql(notes[i].content);
@@ -237,7 +234,7 @@ describe("Notes", () =>{
                             res.body[i].should.have.property('font_color').eql(notes[i].font_color);
                             res.body[i].should.have.property('created_date');
                         }
-                    done();
+                        done();
                     });
             });
         });
@@ -245,7 +242,7 @@ describe("Notes", () =>{
 
     describe("/GET/:id note", () => {
         it("Recuperar uma nota", (done) => {
-            let notes_before= [
+            let notes_before = [
                 {
                     title: "Materias",
                     content: "Portugues\nMatematica",
@@ -271,12 +268,12 @@ describe("Notes", () =>{
             });
             user.save((err) => {
                 //Realiza o login
-                let payload = {id: user._id};
+                let payload = { id: user._id };
                 let token = jwt.encode(payload, config.jwtSecret);
                 let test_note = user.notes[1];
                 chai.request(server)
-                    .get("/note/"+test_note._id)
-                    .set("authorization",token)
+                    .get("/note/" + test_note._id)
+                    .set("authorization", token)
                     .end((err, res) => {
                         res.should.have.status(200);
                         res.body.should.be.a('object');
@@ -291,11 +288,9 @@ describe("Notes", () =>{
                     });
             });
         });
-    });
 
-    describe("/DELETE/:id note", () => {
-        it("Remover uma nota", (done) => {
-            let notes_before= [
+        it("Recuperar uma nota inexistent", (done) => {
+            let notes_before = [
                 {
                     title: "Materias",
                     content: "Portugues\nMatematica",
@@ -321,12 +316,58 @@ describe("Notes", () =>{
             });
             user.save((err) => {
                 //Realiza o login
-                let payload = {id: user._id};
+                let payload = { id: user._id };
+                let token = jwt.encode(payload, config.jwtSecret);
+
+                chai.request(server)
+                    .get("/note/" + "1234") //fake id
+                    .set("authorization", token)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a('object');
+                        res.body.should.have.property('success').eql(false);
+                        res.body.should.have.property('_id').eql("1234");
+                        res.body.should.have.property('message').eql("Note id not found");
+                        done();
+                    });
+            });
+        });
+    });
+
+    describe("/DELETE/:id note", () => {
+        it("Remover uma nota", (done) => {
+            let notes_before = [
+                {
+                    title: "Materias",
+                    content: "Portugues\nMatematica",
+                    background_color: "#000",
+                    font_color: "#FFF"
+                },
+
+                {
+                    title: "Numeros",
+                    content: "456789",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Palavras",
+                    content: "Olho, brinco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+            notes_before.forEach(element => {
+                user.notes.push(element);
+            });
+            user.save((err) => {
+                //Realiza o login
+                let payload = { id: user._id };
                 let token = jwt.encode(payload, config.jwtSecret);
                 let test_note = user.notes[1];
                 chai.request(server)
-                    .delete("/note/"+test_note._id)
-                    .set("authorization",token)
+                    .delete("/note/" + test_note._id)
+                    .set("authorization", token)
                     .end((err, res) => {
                         res.should.have.status(200);
                         res.body.should.be.a('object');
@@ -343,7 +384,7 @@ describe("Notes", () =>{
         });
 
         it("Falha ao remover nota", (done) => {
-            let notes_before= [
+            let notes_before = [
                 {
                     title: "Materias",
                     content: "Portugues\nMatematica",
@@ -369,16 +410,18 @@ describe("Notes", () =>{
             });
             user.save((err) => {
                 //Realiza o login
-                let payload = {id: user._id};
+                let payload = { id: user._id };
                 let token = jwt.encode(payload, config.jwtSecret);
                 chai.request(server)
-                    .delete("/note/"+1234)//Fake ID
-                    .set("authorization",token)
+                    .delete("/note/" + 1234)//Fake ID
+                    .set("authorization", token)
                     .end((err, res) => {
                         res.should.have.status(200);
                         res.body.should.be.a('object');
                         res.body.should.have.property('success').eql(false);
                         res.body.should.have.property('message').eql("Note id not found");
+                        res.body.should.have.property('_id').eql("1234");
+
                         User.findById(user.id).exec((err, new_user) => {
                             new_user.notes.length.should.be.eql(3);
                             done();
@@ -390,7 +433,7 @@ describe("Notes", () =>{
 
     describe("/PUT/:id note", () => {
         it("Atualizar nota", (done) => {
-            let notes_before= [
+            let notes_before = [
                 {
                     title: "Materias",
                     content: "Portugues\nMatematica",
@@ -416,7 +459,7 @@ describe("Notes", () =>{
             });
             user.save((err, user) => {
                 //Realiza o login
-                let payload = {id: user._id};
+                let payload = { id: user._id };
                 let token = jwt.encode(payload, config.jwtSecret);
                 let test_note = user.notes[1];
                 let update = {
@@ -424,8 +467,8 @@ describe("Notes", () =>{
                 };
 
                 chai.request(server)
-                    .put("/note/"+test_note.id)
-                    .set("authorization",token)
+                    .put("/note/" + test_note.id)
+                    .set("authorization", token)
                     .send(update)
                     .end((err, res) => {
                         res.should.have.status(200);
@@ -445,11 +488,9 @@ describe("Notes", () =>{
 
             });
         });
-    });
 
-    describe("/POST notes", () => {
-        it("Recuperar notas em lote", (done) => {
-            let notes_before= [
+        it("Atualizar nota errada", (done) => {
+            let notes_before = [
                 {
                     title: "Materias",
                     content: "Portugues\nMatematica",
@@ -475,28 +516,80 @@ describe("Notes", () =>{
             });
             user.save((err, user) => {
                 //Realiza o login
-                let payload = {id: user._id};
+                let payload = { id: user._id };
+                let token = jwt.encode(payload, config.jwtSecret);
+                let update = {
+                    content: "123456789"
+                };
+
+                chai.request(server)
+                    .put("/note/" + "1234")//fake id
+                    .set("authorization", token)
+                    .send(update)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a('object');
+                        res.body.should.have.property('success').eql(false);
+                        res.body.should.have.property('_id').eql("1234");
+                        res.body.should.have.property('message').eql("Note id not found");
+                        done();
+                    });
+
+            });
+        });
+    });
+
+    describe("/POST notes", () => {
+        it("Recuperar notas em lote", (done) => {
+            let notes_before = [
+                {
+                    title: "Materias",
+                    content: "Portugues\nMatematica",
+                    background_color: "#000",
+                    font_color: "#FFF"
+                },
+
+                {
+                    title: "Numeros",
+                    content: "456789",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Palavras",
+                    content: "Olho, brinco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+            notes_before.forEach(element => {
+                user.notes.push(element);
+            });
+            user.save((err, user) => {
+                //Realiza o login
+                let payload = { id: user._id };
                 let token = jwt.encode(payload, config.jwtSecret);
 
                 let requested_notes = [
                     {
-                        id: user.notes[0].id
+                        _id: user.notes[0].id
                     },
                     {
-                        id: user.notes[2].id
+                        _id: user.notes[2].id
                     }
                 ];
 
                 chai.request(server)
-                    .post("/note")
-                    .set("authorization",token)
+                    .post("/notes")
+                    .set("authorization", token)
+                    .send(requested_notes)
                     .end((err, res) => {
                         res.should.have.status(200);
                         res.body.should.be.a('array');
-                        res.body.notes.length.should.be.eql(2);
-                        for (var i=0; i<2; i++)
-                        {
-                            note = user.notes.id(requested_notes);
+                        res.body.length.should.be.eql(2);
+                        for (var i = 0; i < 2; i++) {
+                            note = user.notes.id(requested_notes[i]._id);
+                            res.body[i].should.have.property('success').eql(true);
                             res.body[i].should.have.property('_id').eql(note.id);
                             res.body[i].should.have.property('title').eql(note.title);
                             res.body[i].should.have.property('content').eql(note.content);
@@ -508,14 +601,245 @@ describe("Notes", () =>{
                     });
             });
         });
+
+        it("Recuperar notas em lote com uma nota inexistente", (done) => {
+            let notes_before = [
+                {
+                    title: "Materias",
+                    content: "Portugues\nMatematica",
+                    background_color: "#000",
+                    font_color: "#FFF"
+                },
+
+                {
+                    title: "Numeros",
+                    content: "456789",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Palavras",
+                    content: "Olho, brinco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+            notes_before.forEach(element => {
+                user.notes.push(element);
+            });
+            user.save((err, user) => {
+                //Realiza o login
+                let payload = { id: user._id };
+                let token = jwt.encode(payload, config.jwtSecret);
+
+                let requested_notes = [
+                    {
+                        _id: user.notes[0].id
+                    },
+                    {
+                        _id: user.notes[2].id
+                    },
+                    {
+                        _id: "123" //fake id
+                    }
+                ];
+
+                chai.request(server)
+                    .post("/notes")
+                    .set("authorization", token)
+                    .send(requested_notes)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a('array');
+                        res.body.length.should.be.eql(3);
+                        for (var i = 0; i < 2; i++) {
+                            note = user.notes.id(requested_notes[i]._id);
+                            res.body[i].should.have.property('success').eql(true);
+                            res.body[i].should.have.property('_id').eql(note.id);
+                            res.body[i].should.have.property('title').eql(note.title);
+                            res.body[i].should.have.property('content').eql(note.content);
+                            res.body[i].should.have.property('background_color').eql(note.background_color);
+                            res.body[i].should.have.property('font_color').eql(note.font_color);
+                            res.body[i].should.have.property('created_date').eql(note.created_date.toISOString());
+                        }
+                        res.body[2].should.have.property('success').eql(false);
+                        res.body[2].should.have.property('_id').eql(requested_notes[2]._id);
+                        res.body[2].should.have.property('message').eql("Note id not found");
+                        done();
+                    });
+            });
+        });
     });
 
     describe("/PUT notes", () => {
+        it("Atualizar notas em lote", (done) => {
+            let notes_before = [
+                {
+                    title: "Materias",
+                    content: "Portugues\nMatematica",
+                    background_color: "#000",
+                    font_color: "#FFF"
+                },
+
+                {
+                    title: "Numeros",
+                    content: "456789",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Palavras",
+                    content: "Olho, brinco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+            notes_before.forEach(element => {
+                user.notes.push(element);
+            });
+            user.save((err, user) => {
+                let payload = { id: user._id };
+                let token = jwt.encode(payload, config.jwtSecret);
+
+                let update = [
+                    {
+                        _id: user.notes[0].id,
+                        title: "Materias para estudar"
+                    },
+                    {
+                        _id: user.notes[1].id,
+                        content: '123456'
+                    },
+                    {
+                        _id: user.notes[2].id,
+                        background_color: "#333"
+                    }
+                ];
+
+                chai.request(server)
+                    .put("/notes")
+                    .set("authorization", token)
+                    .send(update)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a("array");
+                        res.body.length.should.be.eql(3);
+
+                        notes_before[0].title = update[0].title;
+                        notes_before[1].content = update[1].content;
+                        notes_before[2].background_color = update[2].background_color;
+
+                        User.findById(user.id).exec((err, new_user) => {
+                            for (var i = 0; i < 3; i++) {
+                                res.body[i].should.have.property('success').eql(true);
+                                res.body[i].should.have.property('_id').eql(update[i]._id);
+                                res.body[i].should.have.property('title').eql(notes_before[i].title);
+                                res.body[i].should.have.property('content').eql(notes_before[i].content); //Updated field
+                                res.body[i].should.have.property('background_color').eql(notes_before[i].background_color);
+                                res.body[i].should.have.property('font_color').eql(notes_before[i].font_color);
+                                res.body[i].should.have.property('created_date');
+
+                                note = new_user.notes.id(update[i]._id);
+                                note.id.should.be.eql(update[i]._id);
+                                note.title.should.be.eql(notes_before[i].title);
+                                note.content.should.be.eql(notes_before[i].content);
+                                note.background_color.should.be.eql(notes_before[i].background_color);
+                                note.font_color.should.be.eql(notes_before[i].font_color);
+                            }
+                            done();
+                        });
+                    });
+            });
+        });
+
+        it("Atualizar uma nota existente e uma inexistente", (done) => {
+            let notes_before = [
+                {
+                    title: "Materias",
+                    content: "Portugues\nMatematica",
+                    background_color: "#000",
+                    font_color: "#FFF"
+                },
+
+                {
+                    title: "Numeros",
+                    content: "456789",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Palavras",
+                    content: "Olho, brinco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+            notes_before.forEach(element => {
+                user.notes.push(element);
+            });
+            user.save((err, user) => {
+                let payload = { id: user._id };
+                let token = jwt.encode(payload, config.jwtSecret);
+
+                let update = [
+                    {
+                        _id: user.notes[0].id,
+                        title: "Materias para estudar"
+                    },
+                    {
+                        _id: user.notes[1].id,
+                        content: '123456'
+                    },
+                    {
+                        _id: "456",
+                        background_color: "#333"
+                    }
+                ];
+
+                chai.request(server)
+                    .put("/notes")
+                    .set("authorization", token)
+                    .send(update)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a("array");
+                        res.body.length.should.be.eql(3);
+
+                        notes_before[0].title = update[0].title;
+                        notes_before[1].content = update[1].content;
+                        notes_before[2].background_color = update[2].background_color;
+
+                        User.findById(user.id).exec((err, new_user) => {
+                            for (var i = 0; i < 2; i++) {
+                                res.body[i].should.have.property('success').eql(true);
+                                res.body[i].should.have.property('_id').eql(update[i]._id);
+                                res.body[i].should.have.property('title').eql(notes_before[i].title);
+                                res.body[i].should.have.property('content').eql(notes_before[i].content); //Updated field
+                                res.body[i].should.have.property('background_color').eql(notes_before[i].background_color);
+                                res.body[i].should.have.property('font_color').eql(notes_before[i].font_color);
+                                res.body[i].should.have.property('created_date');
+                                
+                                note = new_user.notes.id(update[i]._id);
+                                note.id.should.be.eql(update[i]._id);
+                                note.title.should.be.eql(notes_before[i].title);
+                                note.content.should.be.eql(notes_before[i].content);
+                                note.background_color.should.be.eql(notes_before[i].background_color);
+                                note.font_color.should.be.eql(notes_before[i].font_color);
+                            }
+                            res.body[2].should.have.property('success').eql(false);
+                            res.body[2].should.have.property('_id').eql(update[2]._id);
+                            res.body[2].should.have.property('message').eql("Note id not found");
+                            done();
+                        });
+                    });
+            });
+        });
+
     });
 
     describe("/DELETE notes", () => {
         it("Remover notas em lote", (done) => {
-            let notes_before= [
+            let notes_before = [
                 {
                     title: "Materias",
                     content: "Portugues\nMatematica",
@@ -540,9 +864,9 @@ describe("Notes", () =>{
             notes_before.forEach(element => {
                 user.notes.push(element);
             });
-            user.save((err) => {
+            user.save((err, user) => {
                 //Realiza o login
-                let payload = {id: user._id};
+                let payload = { id: user._id };
                 let token = jwt.encode(payload, config.jwtSecret);
                 let notes_to_delete = [
                     {
@@ -554,20 +878,85 @@ describe("Notes", () =>{
                 ];
 
                 chai.request(server)
-                    .delete("/note")
-                    .set("authorization",token)
+                    .delete("/notes")
+                    .set("authorization", token)
+                    .send(notes_to_delete)
                     .end((err, res) => {
                         res.should.have.status(200);
                         res.body.should.be.a('array');
-                        res.body.notes.length.should.be.eql(2);
-                        for(var i=0; i<1; i++){
+                        res.body.length.should.be.eql(2);
+                        for (var i = 0; i < 1; i++) {
                             res.body[i].should.have.property('success').eql(true);
                             res.body[i].should.have.property('id').eql(notes_to_delete[i].id);
                         }
-                        User.findById(test_note.__parent.id).exec((err, new_user) => {
+                        User.findById(user.id).exec((err, new_user) => {
                             new_user.notes.length.should.be.eql(1);
                             should.not.exist(new_user.notes.id(notes_to_delete[0].id));
                             should.not.exist(new_user.notes.id(notes_to_delete[1].id));
+                            done();
+                        });
+                    });
+            });
+        });
+
+        it("Remover uma nota existente e uma não existente", (done) => {
+            let notes_before = [
+                {
+                    title: "Materias",
+                    content: "Portugues\nMatematica",
+                    background_color: "#000",
+                    font_color: "#FFF"
+                },
+
+                {
+                    title: "Numeros",
+                    content: "456789",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Palavras",
+                    content: "Olho, brinco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+
+            notes_before.forEach(element => {
+                user.notes.push(element);
+            });
+            user.save((err, user) => {
+                //Realiza o login
+                let payload = { id: user._id };
+                let token = jwt.encode(payload, config.jwtSecret);
+                let notes_to_delete = [
+                    {
+                        id: user.notes[0].id
+                    },
+                    {
+                        id: "123654" //fake id
+                    }
+                ];
+
+                chai.request(server)
+                    .delete("/notes")
+                    .set("authorization", token)
+                    .send(notes_to_delete)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a('array');
+                        res.body.length.should.be.eql(2);
+
+                        res.body[0].should.have.property('success').eql(true);
+                        res.body[0].should.have.property('id').eql(notes_to_delete[0].id);
+
+                        res.body[1].should.have.property('success').eql(false);
+                        res.body[1].should.have.property('id').eql(notes_to_delete[1].id);
+                        res.body[1].should.have.property('message').eql("Note id not found");
+                
+                        User.findById(user.id).exec((err, new_user) => {
+                            new_user.notes.length.should.be.eql(2);
+                            should.not.exist(new_user.notes.id(notes_to_delete[0].id));
                             done();
                         });
                     });
