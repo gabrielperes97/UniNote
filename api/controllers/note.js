@@ -134,15 +134,15 @@ exports.delete_notes = function (req, res) {
     let user = req.user;
     let result = [];
     req.body.forEach(element => {
-        let note = user.notes.id(element.id);
+        let note = user.notes.id(element._id);
         if (note)
         {
             let id = note.id;
             note.remove();
-            result.push({id: id, success: true});
+            result.push({_id: id, success: true});
         }
         else
-            result.push({success: false, message: "Note id not found", id: element.id});
+            result.push({success: false, message: "Note id not found", _id: element._id});
     });
     user.save((err) => {
         if (err)

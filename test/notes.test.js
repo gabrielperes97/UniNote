@@ -870,10 +870,10 @@ describe("Notes", () => {
                 let token = jwt.encode(payload, config.jwtSecret);
                 let notes_to_delete = [
                     {
-                        id: user.notes[0].id
+                        _id: user.notes[0].id
                     },
                     {
-                        id: user.notes[2].id
+                        _id: user.notes[2].id
                     }
                 ];
 
@@ -887,12 +887,12 @@ describe("Notes", () => {
                         res.body.length.should.be.eql(2);
                         for (var i = 0; i < 1; i++) {
                             res.body[i].should.have.property('success').eql(true);
-                            res.body[i].should.have.property('id').eql(notes_to_delete[i].id);
+                            res.body[i].should.have.property('_id').eql(notes_to_delete[i]._id);
                         }
                         User.findById(user.id).exec((err, new_user) => {
                             new_user.notes.length.should.be.eql(1);
-                            should.not.exist(new_user.notes.id(notes_to_delete[0].id));
-                            should.not.exist(new_user.notes.id(notes_to_delete[1].id));
+                            should.not.exist(new_user.notes.id(notes_to_delete[0]._id));
+                            should.not.exist(new_user.notes.id(notes_to_delete[1]._id));
                             done();
                         });
                     });
@@ -931,10 +931,10 @@ describe("Notes", () => {
                 let token = jwt.encode(payload, config.jwtSecret);
                 let notes_to_delete = [
                     {
-                        id: user.notes[0].id
+                        _id: user.notes[0].id
                     },
                     {
-                        id: "123654" //fake id
+                        _id: "123654" //fake id
                     }
                 ];
 
@@ -948,15 +948,15 @@ describe("Notes", () => {
                         res.body.length.should.be.eql(2);
 
                         res.body[0].should.have.property('success').eql(true);
-                        res.body[0].should.have.property('id').eql(notes_to_delete[0].id);
+                        res.body[0].should.have.property('_id').eql(notes_to_delete[0]._id);
 
                         res.body[1].should.have.property('success').eql(false);
-                        res.body[1].should.have.property('id').eql(notes_to_delete[1].id);
+                        res.body[1].should.have.property('_id').eql(notes_to_delete[1]._id);
                         res.body[1].should.have.property('message').eql("Note id not found");
                 
                         User.findById(user.id).exec((err, new_user) => {
                             new_user.notes.length.should.be.eql(2);
-                            should.not.exist(new_user.notes.id(notes_to_delete[0].id));
+                            should.not.exist(new_user.notes.id(notes_to_delete[0]._id));
                             done();
                         });
                     });
