@@ -29,6 +29,11 @@ var userSchema = new Schema ({
         required: true
     },
 
+    last_update: {
+        type: Date,
+        default: Date.now
+    },
+
     created_date: {
         type: Date,
         default: Date.now
@@ -40,6 +45,11 @@ var userSchema = new Schema ({
     },
 
     notes: [Note]
+});
+
+userSchema.pre('save', function (next) {
+    this.last_update = Date.now();
+    next();
 });
 
 module.exports = mongoose.model('Users', userSchema);

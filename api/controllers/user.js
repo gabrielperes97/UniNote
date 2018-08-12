@@ -4,15 +4,6 @@ let mongoose = require('mongoose');
 let User = mongoose.model('Users');
 let bcrypt = require("bcrypt");
 
-
-exports.list_all_users = function(req, res) {
-    User.find({}, function(err, msg) {
-            if (err)
-                res.send(err);
-            res.json(msg);
-    });
-};
-
 exports.create_a_user = function(req, res) {
     User.findOne({"username": req.body.username})
         .then(user => {
@@ -41,12 +32,17 @@ exports.create_a_user = function(req, res) {
 };
 
 exports.read_a_user = function(req, res) {
-    User.findById(req.params.userId, function(err, msg) {
-        if (err)
-            res.send(err);
-        else
-            res.json(msg);
-    });
+    let ret = {
+        firstname: req.user.firstname,
+        lastname: req.user.lastname,
+        username: req.user.username,
+        email: req.user.email,
+        _id: req.user.id,
+        created_date: req.user.created_date,
+        last_update: req.user.last_update,
+        success: true
+    };
+    res.json(ret);
 };
 
 exports.update_a_user = function (req, res) {

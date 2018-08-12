@@ -31,7 +31,6 @@ describe("Notes", () => {
                 done();
             });
         });
-
     });
 
     describe("/GET note", () => {
@@ -78,10 +77,26 @@ describe("Notes", () => {
                             res.body.notes[i].should.have.property('background_color').eql(notes_before[i].background_color);
                             res.body.notes[i].should.have.property('font_color').eql(notes_before[i].font_color);
                             res.body.notes[i].should.have.property('created_date');
+                            res.body.notes[i].should.have.property('last_update');
                         }
                         done();
                     });
             });
+        });
+
+        it("Usuário não tem notas", done => {
+            let payload = { id: user._id };
+            let token = jwt.encode(payload, config.jwtSecret);
+            chai.request(server)
+                .get("/note")
+                .set("authorization", token)
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.be.a('object');
+                    res.body.notes.should.be.a('array');
+                    res.body.notes.length.should.be.eql(0);
+                    done();
+                });
         });
     });
 
@@ -115,6 +130,7 @@ describe("Notes", () => {
                     res.body[0].should.have.property('background_color').eql(note[0].background_color);
                     res.body[0].should.have.property('font_color').eql(note[0].font_color);
                     res.body[0].should.have.property('created_date');
+                    res.body[0].should.have.property('last_update');
                     done();
                 });
         });
@@ -161,6 +177,7 @@ describe("Notes", () => {
                         res.body[i].should.have.property('background_color').eql(notes[i].background_color);
                         res.body[i].should.have.property('font_color').eql(notes[i].font_color);
                         res.body[i].should.have.property('created_date');
+                        res.body[i].should.have.property('last_update');
                     }
                     done();
                 });
@@ -233,6 +250,7 @@ describe("Notes", () => {
                             res.body[i].should.have.property('background_color').eql(notes[i].background_color);
                             res.body[i].should.have.property('font_color').eql(notes[i].font_color);
                             res.body[i].should.have.property('created_date');
+                            res.body[i].should.have.property('last_update');
                         }
                         done();
                     });
@@ -284,6 +302,7 @@ describe("Notes", () => {
                         res.body.should.have.property('background_color').eql(test_note.background_color);
                         res.body.should.have.property('font_color').eql(test_note.font_color);
                         res.body.should.have.property('created_date');
+                        res.body.should.have.property('last_update');
                         done();
                     });
             });
@@ -481,7 +500,9 @@ describe("Notes", () => {
                         res.body.should.have.property('font_color').eql(test_note.font_color);
                         res.body.should.have.property('created_date').eql(test_note.created_date.toISOString());
                         User.findById(user.id).exec((err, new_user) => {
-                            new_user.notes.id(test_note.id).content.should.be.eql(update.content);
+                            note_updated = new_user.notes.id(test_note.id);
+                            res.body.should.have.property('last_update').eql(note_updated.last_update.toISOString());
+                            note_updated.content.should.be.eql(update.content);
                             done();
                         });
                     });
@@ -596,6 +617,7 @@ describe("Notes", () => {
                             res.body[i].should.have.property('background_color').eql(note.background_color);
                             res.body[i].should.have.property('font_color').eql(note.font_color);
                             res.body[i].should.have.property('created_date').eql(note.created_date.toISOString());
+                            res.body[i].should.have.property('last_update').eql(note.last_update.toISOString());
                         }
                         done();
                     });
@@ -661,6 +683,7 @@ describe("Notes", () => {
                             res.body[i].should.have.property('background_color').eql(note.background_color);
                             res.body[i].should.have.property('font_color').eql(note.font_color);
                             res.body[i].should.have.property('created_date').eql(note.created_date.toISOString());
+                            res.body[i].should.have.property('last_update').eql(note.last_update.toISOString());
                         }
                         res.body[2].should.have.property('success').eql(false);
                         res.body[2].should.have.property('_id').eql(requested_notes[2]._id);
@@ -738,6 +761,7 @@ describe("Notes", () => {
                                 res.body[i].should.have.property('background_color').eql(notes_before[i].background_color);
                                 res.body[i].should.have.property('font_color').eql(notes_before[i].font_color);
                                 res.body[i].should.have.property('created_date');
+                                res.body[i].should.have.property('last_update');
 
                                 note = new_user.notes.id(update[i]._id);
                                 note.id.should.be.eql(update[i]._id);
@@ -818,6 +842,7 @@ describe("Notes", () => {
                                 res.body[i].should.have.property('background_color').eql(notes_before[i].background_color);
                                 res.body[i].should.have.property('font_color').eql(notes_before[i].font_color);
                                 res.body[i].should.have.property('created_date');
+                                res.body[i].should.have.property('last_update');
                                 
                                 note = new_user.notes.id(update[i]._id);
                                 note.id.should.be.eql(update[i]._id);
@@ -835,6 +860,89 @@ describe("Notes", () => {
             });
         });
 
+        it("Quando atualizar uma nota, o campo last_update deve atualizar automaticamente", done => {
+            let notes_before = [
+                {
+                    title: "Materias",
+                    content: "Portugues\nMatematica",
+                    background_color: "#000",
+                    font_color: "#FFF"
+                },
+
+                {
+                    title: "Numeros",
+                    content: "456789",
+                    background_color: "#111",
+                    font_color: "#EEE"
+                },
+                {
+                    title: "Palavras",
+                    content: "Olho, brinco",
+                    background_color: "#222",
+                    font_color: "#GGG"
+                }
+            ];
+            notes_before.forEach(element => {
+                user.notes.push(element);
+            });
+            user.save((err, user) => {
+                let payload = { id: user._id };
+                let token = jwt.encode(payload, config.jwtSecret);
+
+                let update = [
+                    {
+                        _id: user.notes[0].id,
+                        title: "Materias para estudar"
+                    },
+                    {
+                        _id: user.notes[1].id,
+                        content: '123456'
+                    },
+                    {
+                        _id: user.notes[2].id,
+                        background_color: "#333"
+                    }
+                ];
+
+                chai.request(server)
+                    .put("/notes")
+                    .set("authorization", token)
+                    .send(update)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a("array");
+                        res.body.length.should.be.eql(3);
+
+                        notes_before[0].title = update[0].title;
+                        notes_before[1].content = update[1].content;
+                        notes_before[2].background_color = update[2].background_color;
+
+                        User.findById(user.id).exec((err, new_user) => {
+                            for (var i = 0; i < 3; i++) {
+                                res.body[i].should.have.property('success').eql(true);
+                                res.body[i].should.have.property('_id').eql(update[i]._id);
+                                res.body[i].should.have.property('title').eql(notes_before[i].title);
+                                res.body[i].should.have.property('content').eql(notes_before[i].content); //Updated field
+                                res.body[i].should.have.property('background_color').eql(notes_before[i].background_color);
+                                res.body[i].should.have.property('font_color').eql(notes_before[i].font_color);
+                                res.body[i].should.have.property('created_date');
+                                res.body[i].should.have.property('last_update');
+
+                                note = new_user.notes.id(update[i]._id);
+                                note.id.should.be.eql(update[i]._id);
+                                note.title.should.be.eql(notes_before[i].title);
+                                note.content.should.be.eql(notes_before[i].content);
+                                note.background_color.should.be.eql(notes_before[i].background_color);
+                                note.font_color.should.be.eql(notes_before[i].font_color);
+
+                                old_note = user.notes.id(update[i]._id);
+                                old_note.last_update.toISOString().should.be.not.eql(note.last_update.toISOString());
+                            }
+                            done();
+                        });
+                    });
+            });
+        });
     });
 
     describe("/DELETE notes", () => {

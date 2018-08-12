@@ -3,13 +3,17 @@ mongoose = require("mongoose");
 User = require('../api/models/user')
 
 chai = require("chai")
-chaiHttp =  require("chai-http");
+chaiHttp = require("chai-http");
 server = require("../server");
 should = chai.should();
 
+let bcrypt = require("bcrypt");
+let jwt = require("jwt-simple");
+let config = require('../configs/' + (process.env.NODE_ENV || "dev") + ".json");
+
 chai.use(chaiHttp);
 
-describe("Users", () =>{
+describe("Users", () => {
 
     //esvazia o banco a cada teste
     beforeEach((done) => {
@@ -36,7 +40,7 @@ describe("Users", () =>{
                     res.body.should.be.a('object');
                     res.body.should.have.property('success').eql(false);
                     res.body.should.have.property('message').eql("data and salt arguments required");
-                done();
+                    done();
                 });
         });
 
@@ -56,7 +60,7 @@ describe("Users", () =>{
                     res.body.should.be.a('object');
                     res.body.should.have.property('success').eql(true);
                     res.body.should.have.property('message').eql("User created with success");
-                done();
+                    done();
                 });
         });
 
@@ -85,9 +89,67 @@ describe("Users", () =>{
                         res.body.should.be.a('object');
                         res.body.should.have.property('success').eql(false);
                         res.body.should.have.property("message").eql("This username has no available");
-                    done();
+                        done();
                     });
             });
-        })
+        });
     });
+
+    describe("/GET user", () => {
+        it("Deve recuperar dados sobre o usuário", done => {
+            let user_example = {
+                firstname: "Gabriel",
+                lastname: "Peres",
+                username: "gabrielperes",
+                password: bcrypt.hashSync("123321", 10),
+                email: "gabriel@peres.com",
+            };
+            user = new User(user_example);
+            user.save((err) => {
+                let payload = { id: user._id };
+                let token = jwt.encode(payload, config.jwtSecret);
+
+                chai.request(server)
+                    .get("/user")
+                    .set("authorization", token)
+                    .end((err, res) => {
+                        res.should.have.status(200);
+                        res.body.should.be.a('object');
+                        res.body.should.have.property('success').eql(true);
+                        res.body.should.have.property('firstname').eql(user_example.firstname);
+                        res.body.should.have.property('lastname').eql(user_example.lastname);
+                        res.body.should.have.property('username').eql(user_example.username);
+                        res.body.should.have.property('email').eql(user_example.email);
+                        res.body.should.have.property('_id').eql(user.id);
+                        res.body.should.have.property('created_date').eql(user.created_date.toISOString());
+                        res.body.should.have.property('last_update').eql(user.last_update.toISOString());
+
+                        //Must have only the fields above
+                        res.body.should.not.have.property('password');
+                        res.body.should.not.have.property('notes');
+                        done();
+                    });
+            });
+        });
+
+        it("Deve apresentar um erro caso não esteja logado", done => {
+            chai.request(server)
+                .get("/user")
+                .end((err, res) => {
+                    res.should.have.status(401);
+                    res.body.should.be.a('object');
+                    res.body.should.not.have.property('success');
+                    res.body.should.not.have.property('message');
+                    res.body.should.not.have.property('lastname');
+                    res.body.should.not.have.property('username');
+                    res.body.should.not.have.property('email');
+                    res.body.should.not.have.property('_id');
+                    res.body.should.not.have.property('password');
+                    res.body.should.not.have.property('notes');
+                    done();
+                });
+        });
+    });
+
+    
 });

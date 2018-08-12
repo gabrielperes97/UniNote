@@ -12,6 +12,11 @@ var NoteSchema = new Schema ({
         required: true
     },
 
+    last_update: {
+        type: Date,
+        default: Date.now
+    },
+
     created_date: {
         type: Date,
         default: Date.now
@@ -26,6 +31,11 @@ var NoteSchema = new Schema ({
         type: String,
         default: "#000"
     }
+});
+
+NoteSchema.pre('save', function (next) {
+    this.last_update = Date.now();
+    next();
 });
 
 module.exports = NoteSchema;
