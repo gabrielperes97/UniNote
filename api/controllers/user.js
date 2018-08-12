@@ -46,19 +46,60 @@ exports.read_a_user = function(req, res) {
 };
 
 exports.update_a_user = function (req, res) {
-    User.findOneAndUpdate({_id:req.params.msgId}, req.body, {new:true}, function(err, msg){
-        if (err)
-            res.send(err);
-        res.json(msg);
-    });
+    var updated = false;
+    if (req.body.firstname)
+    {
+        req.user.firstname = req.body.firstname;
+        updated = true;
+    }
+    if (req.body.lastname)
+    {
+        req.user.lastname = req.body.lastname;
+        updated = true;
+    }
+    if (req.body.email)
+    {
+        req.user.email = req.body.email;
+        updated = true;
+    }
+    if (req.body.password)
+    {
+        req.user.password = bcrypt.hashSync(req.body.password, 10);
+        updated = true;
+    }
+    
+    if (updated)
+    {
+        req.user.save((err, user) => {
+            if(err)
+                res.json({success: false, message: err});
+            else
+            {
+                let ret = {
+                    firstname: user.firstname,
+                    lastname: user.lastname,
+                    username: user.username,
+                    email: user.email,
+                    _id: user.id,
+                    created_date: user.created_date,
+                    last_update: user.last_update,
+                    success: true
+                };
+                res.json(ret);
+            }
+        });
+    }
+    else
+    {
+        res.json({success: false, message: "Don't have a valid field to update"});
+    }
 };
 
 exports.delete_a_user = function(req, res) {
-    User.remove({
-        _id:req.params.msgId
-    }, function(err, msg) {
+    req.user.remove(err => {
         if (err)
-            res.send(err);
-        res.json({message: 'User successfully deleted'});
+            res.json({success: false, message: err});
+        else
+            res.json({success: true, message: 'User successfully deleted'});
     });
 };
